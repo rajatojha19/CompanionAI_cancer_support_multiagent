@@ -12,7 +12,7 @@ from dataclasses import dataclass
 import re
 import textwrap
 from services.gemini_service import GeminiClient
-
+from models.session import UserSession
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -42,27 +42,6 @@ Every reply MUST end with this exact sentence:
 
 "⚠️ I am not a doctor and cannot provide medical advice. Please consult a qualified medical professional."
 """.strip()
-
-@dataclass
-class UserSession:
-    """Session management for user conversations"""
-
-    session_id: str
-    user_name: str
-    created_at: datetime
-    conversation_history: List[Dict]
-    user_preferences: Dict
-
-    def add_message(self, role: str, content: str):
-        self.conversation_history.append(
-            {
-                "timestamp": datetime.now().isoformat(),
-                "role": role,
-                "content": content,
-            }
-        )
-        logger.info(f"Session {self.session_id}: Added {role} message")
-
 
 class EmotionalSupportAgent:
     """Primary agent for emotional support and conversation"""
