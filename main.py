@@ -11,6 +11,7 @@ from typing import Dict, List, Optional
 from dataclasses import dataclass
 import re
 import textwrap
+from services.gemini_service import GeminiClient
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,72 +42,6 @@ Every reply MUST end with this exact sentence:
 
 "⚠️ I am not a doctor and cannot provide medical advice. Please consult a qualified medical professional."
 """.strip()
-
-
-class GeminiClient:
-
-    def __init__(self, api_key: str):
-        self.api_key = api_key
-        self.active = False
-        self.model = None
-
-        if not api_key:
-            logger.info("GeminiClient: No API key found – running in stub mode.")
-            return
-
-        try:
-            import google.generativeai as genai
-
-            genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel(
-                model_name="gemini-1.5-pro",
-                system_instruction=SYSTEM_SAFETY_PROMPT,
-            )
-            self.active = True
-            logger.info("GeminiClient: Gemini model initialised successfully.")
-        except Exception as e:
-            logger.warning(f"GeminiClient: Failed to initialise Gemini – {e}")
-            self.active = False
-
-    def generate(self, user_prompt: str) -> str:
-        """
-        Generate a response using Gemini.
-        If Gemini isn't available, return a stub response.
-        """
-        if not self.active or self.model is None:
-            logger.info("GeminiClient: Using stub response (no real LLM).")
-            return (
-                "[Gemini stub] " + user_prompt[:220]
-                + " ... (this is a demo stub response without real LLM output)\n\n"
-                "⚠️ I am not a doctor and cannot provide medical advice. "
-                "Please consult a qualified medical professional."
-            )
-
-        try:
-            response = self.model.generate_content(
-                user_prompt,
-                generation_config={
-                    "temperature": 0.4,
-                    "top_p": 0.9,
-                    "max_output_tokens": 600,
-                },
-            )
-            text = response.text or ""
-            if "⚠️ I am not a doctor" not in text:
-                text += (
-                    "\n\n⚠️ I am not a doctor and cannot provide medical advice. "
-                    "Please consult a qualified medical professional."
-                )
-            return text
-        except Exception as e:
-            logger.warning(f"GeminiClient: Error while calling Gemini – {e}")
-            return (
-                "I'm having trouble generating a detailed response right now, "
-                "but I’m still here to support you and listen.\n\n"
-                "⚠️ I am not a doctor and cannot provide medical advice. "
-                "Please consult a qualified medical professional."
-            )
-
 
 @dataclass
 class UserSession:
