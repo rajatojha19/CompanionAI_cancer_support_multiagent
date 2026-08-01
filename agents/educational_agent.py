@@ -1,9 +1,7 @@
-import logging
 from typing import Optional
-
+from utils.logger import logger
 from services.gemini_service import GeminiClient
 
-logger = logging.getLogger("CancerSupportCompanion")
 
 class EducationalAgent:
     """Provides general educational information about cancer concepts"""

@@ -1,10 +1,7 @@
-import logging
 from datetime import datetime
 from typing import Dict, Optional
-
+from utils.logger import logger
 from models.session import UserSession
-
-logger = logging.getLogger("CancerSupportCompanion")
 
 class SessionManager:
     """Manages user sessions and memory"""

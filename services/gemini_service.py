@@ -1,6 +1,5 @@
-import logging
-
-logger = logging.getLogger("CancerSupportCompanion")
+from config import SYSTEM_SAFETY_PROMPT
+from utils.logger import logger
 
 SYSTEM_SAFETY_PROMPT = """
 You are CompanionAI, a SAFE and EMPATHETIC assistant for people affected by cancer.

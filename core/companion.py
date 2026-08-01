@@ -1,4 +1,3 @@
-import logging
 from typing import Optional
 
 from agents.emotional_support_agent import EmotionalSupportAgent
@@ -6,8 +5,7 @@ from agents.educational_agent import EducationalAgent
 from agents.question_organizer_agent import QuestionOrganizerAgent
 from services.session_manager import SessionManager
 from services.gemini_service import GeminiClient
-
-logger = logging.getLogger("CancerSupportCompanion")
+from utils.logger import logger
 
 class CancerSupportCompanion:
     """Main multi-agent system coordinating all components"""

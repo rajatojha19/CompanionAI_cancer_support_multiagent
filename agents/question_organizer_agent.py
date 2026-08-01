@@ -1,8 +1,7 @@
-import logging
 import re
-from typing import List, Optional
 
-logger = logging.getLogger("CancerSupportCompanion")
+from typing import List, Optional
+from utils.logger import logger
 
 class QuestionOrganizerAgent:
     """Agent that helps organize questions for medical teams"""

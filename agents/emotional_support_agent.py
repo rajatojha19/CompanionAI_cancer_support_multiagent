@@ -1,11 +1,9 @@
-import logging
 from typing import Optional
 import random
 
 from models.session import UserSession
 from services.gemini_service import GeminiClient
-
-logger = logging.getLogger("CancerSupportCompanion")
+from utils.logger import logger
 
 class EmotionalSupportAgent:
     """Primary agent for emotional support and conversation"""
