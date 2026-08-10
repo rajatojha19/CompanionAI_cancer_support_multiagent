@@ -1,8 +1,18 @@
 import streamlit as st
 
+from core.companion import CancerSupportCompanion
+
 
 def show_chat_page():
     """Display chat interface."""
+
+    if "companion" not in st.session_state:
+        st.session_state.companion = CancerSupportCompanion()
+
+    if "session_id" not in st.session_state:
+        _, st.session_state.session_id = (
+            st.session_state.companion.start_new_conversation("User")
+        )
 
     st.title("🤖 CompanionAI Chat")
 
@@ -38,10 +48,12 @@ def show_chat_page():
         with st.chat_message("user"):
             st.write(user_message)
 
-        # Temporary response
+        # Process message through the real multi-agent system
         assistant_response = (
-            "I am here to support you. "
-            "This connection will be linked to the AI agents next."
+            st.session_state.companion.process_message(
+                st.session_state.session_id,
+                user_message
+            )
         )
 
         st.session_state.messages.append(

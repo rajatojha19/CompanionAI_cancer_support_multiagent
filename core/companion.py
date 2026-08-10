@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List, Dict
 
 from agents.emotional_support_agent import EmotionalSupportAgent
 from agents.educational_agent import EducationalAgent
