@@ -28,3 +28,7 @@ class SessionManager:
 
     def save_session_state(self, session: UserSession):
         logger.info(f"SessionManager: Saved state for session {session.session_id}")
+
+    def get_all_sessions(self) -> Dict[str, UserSession]:
+        """Return all active user sessions."""
+        return self.sessions.copy()
