@@ -1,5 +1,6 @@
 import streamlit as st
 
+from ui.sidebar import show_sidebar
 from ui.welcome import show_welcome_page
 from ui.chat import show_chat_page
 
@@ -9,6 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
+show_sidebar()
 
 if "page" not in st.session_state:
     st.session_state["page"] = "welcome"
