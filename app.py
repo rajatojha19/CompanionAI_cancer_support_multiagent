@@ -3,6 +3,7 @@ import streamlit as st
 from ui.sidebar import show_sidebar
 from ui.welcome import show_welcome_page
 from ui.chat import show_chat_page
+from ui.settings import show_settings
 
 st.set_page_config(
     page_title="CompanionAI",
@@ -20,3 +21,6 @@ if st.session_state["page"] == "welcome":
 
 elif st.session_state["page"] == "chat":
     show_chat_page()
+
+elif st.session_state["page"] == "settings":
+    show_settings()

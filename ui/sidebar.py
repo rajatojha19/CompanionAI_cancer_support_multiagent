@@ -72,4 +72,6 @@ def show_sidebar():
 
     st.sidebar.markdown("---")
 
-    st.sidebar.markdown("### ⚙️ Settings")
+    if st.sidebar.button("⚙️ Settings", use_container_width=True):
+        st.session_state["page"] = "settings"
+        st.rerun()
