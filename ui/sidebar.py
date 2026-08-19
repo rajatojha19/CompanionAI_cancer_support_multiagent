@@ -6,14 +6,41 @@ from core.companion import CancerSupportCompanion
 def show_sidebar():
     """Display the CompanionAI sidebar."""
 
-    st.sidebar.title("🤖 CompanionAI")
+    # ============================================================
+    # Backend initialization
+    # ============================================================
 
-    # Make sure the backend companion exists
     if "companion" not in st.session_state:
         st.session_state.companion = CancerSupportCompanion()
 
+    # ============================================================
+    # Sidebar Header
+    # ============================================================
+
+    st.sidebar.title("🎗️ CompanionAI")
+    st.sidebar.caption("Cancer Support & Education")
+
+    st.sidebar.markdown("---")
+
+    # ============================================================
+    # Home
+    # ============================================================
+
+    if st.sidebar.button(
+        "⌂  Home",
+        use_container_width=True,
+    ):
+        st.session_state["page"] = "welcome"
+        st.rerun()
+
+    # ============================================================
     # New Chat
-    if st.sidebar.button("➕ New Chat", use_container_width=True):
+    # ============================================================
+
+    if st.sidebar.button(
+        "＋  New Chat",
+        use_container_width=True,
+    ):
         st.session_state["page"] = "chat"
         st.session_state["messages"] = []
         st.session_state.pop("session_id", None)
@@ -21,20 +48,65 @@ def show_sidebar():
 
     st.sidebar.markdown("---")
 
-    st.sidebar.markdown("### ❤️ Emotional Support")
-    st.sidebar.markdown("### 📚 Cancer Education")
-    st.sidebar.markdown("### 📝 Doctor Questions")
+    # ============================================================
+    # Quick Access
+    # ============================================================
+
+    st.sidebar.markdown("### Quick Access")
+
+    if st.sidebar.button(
+        "💗  Emotional Support",
+        use_container_width=True,
+    ):
+        st.session_state["page"] = "chat"
+        st.session_state["suggested_topic"] = (
+            "I'm feeling overwhelmed and would like some emotional support."
+        )
+        st.rerun()
+
+    if st.sidebar.button(
+        "📚  Cancer Education",
+        use_container_width=True,
+    ):
+        st.session_state["page"] = "chat"
+        st.session_state["suggested_topic"] = (
+            "I would like to learn about a cancer-related topic."
+        )
+        st.rerun()
+
+    if st.sidebar.button(
+        "📝  Doctor Questions",
+        use_container_width=True,
+    ):
+        st.session_state["page"] = "chat"
+        st.session_state["suggested_topic"] = (
+            "I want help preparing questions for my medical team."
+        )
+        st.rerun()
 
     st.sidebar.markdown("---")
 
+    # ============================================================
     # Chat History
+    # ============================================================
+
     st.sidebar.markdown("### 📜 Chat History")
 
-    sessions = st.session_state.companion.session_manager.get_all_sessions()
+    sessions = (
+        st.session_state
+        .companion
+        .session_manager
+        .get_all_sessions()
+    )
 
     if not sessions:
-        st.sidebar.info("No previous conversations")
+
+        st.sidebar.caption(
+            "No previous conversations."
+        )
+
     else:
+
         for session_id, session in sessions.items():
 
             label = (
@@ -47,6 +119,7 @@ def show_sidebar():
                 key=f"history_{session_id}",
                 use_container_width=True,
             ):
+
                 st.session_state["session_id"] = session_id
                 st.session_state["page"] = "chat"
 
@@ -54,6 +127,7 @@ def show_sidebar():
                 st.session_state["messages"] = []
 
                 for message in session.conversation_history:
+
                     role = message["role"]
 
                     if role == "user":
@@ -72,6 +146,13 @@ def show_sidebar():
 
     st.sidebar.markdown("---")
 
-    if st.sidebar.button("⚙️ Settings", use_container_width=True):
+    # ============================================================
+    # Settings
+    # ============================================================
+
+    if st.sidebar.button(
+        "⚙️  Settings",
+        use_container_width=True,
+    ):
         st.session_state["page"] = "settings"
         st.rerun()

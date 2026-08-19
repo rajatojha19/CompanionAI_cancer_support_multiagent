@@ -5,17 +5,24 @@ from ui.welcome import show_welcome_page
 from ui.chat import show_chat_page
 from ui.settings import show_settings
 
+
 st.set_page_config(
     page_title="CompanionAI",
     page_icon="🤖",
     layout="wide"
 )
 
-show_sidebar()
 
+# Initialize current page
 if "page" not in st.session_state:
     st.session_state["page"] = "welcome"
 
+
+# Display sidebar navigation
+show_sidebar()
+
+
+# Page routing
 if st.session_state["page"] == "welcome":
     show_welcome_page()
 

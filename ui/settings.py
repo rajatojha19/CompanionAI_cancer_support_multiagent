@@ -10,14 +10,17 @@ def show_settings():
 
     st.subheader("👤 User")
 
-    user_name = st.text_input(
-        "Name",
-        value=st.session_state.get("user_name", "User"),
+    name = st.text_input(
+    "Name",
+    placeholder="Enter your name"
     )
 
     if st.button("💾 Save Name"):
-        st.session_state["user_name"] = user_name
-        st.success("Name saved successfully.")
+        if name.strip():
+            st.session_state["user_name"] = name.strip()
+            st.success(f"Name saved as {name.strip()}")
+        else:
+            st.warning("Please enter your name first.")
 
     st.markdown("---")
 
