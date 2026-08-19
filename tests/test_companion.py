@@ -1,8 +1,10 @@
 from core.companion import CancerSupportCompanion
-
+from services.gemini_service import GeminiClient
 
 def test_start_new_conversation():
-    companion = CancerSupportCompanion()
+    companion = CancerSupportCompanion(
+    llm=GeminiClient("")
+    )
 
     welcome_message, session_id = companion.start_new_conversation("Rajat")
 
@@ -13,7 +15,8 @@ def test_start_new_conversation():
 
 
 def test_emotional_message_routing():
-    companion = CancerSupportCompanion()
+    companion = CancerSupportCompanion(llm=GeminiClient(""))
+
 
     _, session_id = companion.start_new_conversation("Rajat")
 
@@ -29,7 +32,7 @@ def test_emotional_message_routing():
 
 
 def test_question_message_routing():
-    companion = CancerSupportCompanion()
+    companion = CancerSupportCompanion(llm=GeminiClient(""))
 
     _, session_id = companion.start_new_conversation("Rajat")
 
@@ -45,7 +48,7 @@ def test_question_message_routing():
 
 
 def test_educational_message_routing():
-    companion = CancerSupportCompanion()
+    companion = CancerSupportCompanion(llm=GeminiClient(""))
 
     _, session_id = companion.start_new_conversation("Rajat")
 
@@ -61,7 +64,7 @@ def test_educational_message_routing():
 
 
 def test_invalid_session():
-    companion = CancerSupportCompanion()
+    companion = CancerSupportCompanion(llm=GeminiClient(""))
 
     response = companion.process_message(
         "invalid_session_id",
@@ -72,7 +75,7 @@ def test_invalid_session():
 
 
 def test_get_conversation_history():
-    companion = CancerSupportCompanion()
+    companion = CancerSupportCompanion(llm=GeminiClient(""))
 
     _, session_id = companion.start_new_conversation("Rajat")
 
@@ -90,7 +93,7 @@ def test_get_conversation_history():
 
 
 def test_get_metrics():
-    companion = CancerSupportCompanion()
+    companion = CancerSupportCompanion(llm=GeminiClient(""))
 
     _, session_id = companion.start_new_conversation("Rajat")
 
@@ -104,3 +107,18 @@ def test_get_metrics():
     assert metrics["sessions_created"] == 1
     assert metrics["messages_processed"] == 1
     assert metrics["emotional_support_given"] == 1
+    
+def test_hinglish_educational_message_routing():
+    companion = CancerSupportCompanion(
+        llm=GeminiClient("")
+    )
+
+    _, session_id = companion.start_new_conversation("Rajat")
+
+    response = companion.process_message(
+        session_id,
+        "Surgery kaise hoti hai?"
+    )
+
+    assert response
+    assert companion.metrics["concepts_explained"] == 1

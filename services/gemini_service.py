@@ -1,63 +1,47 @@
+from typing import Optional
+
+from google import genai
+from google.genai import types
+
 from config import SYSTEM_SAFETY_PROMPT
 from utils.logger import logger
 
-SYSTEM_SAFETY_PROMPT = """
-You are CompanionAI, a SAFE and EMPATHETIC assistant for people affected by cancer.
-
-You MUST follow these rules:
-
-- Do NOT diagnose.
-- Do NOT recommend or compare treatments.
-- Do NOT suggest drugs, dosages, or medical procedures.
-- Do NOT interpret test results or symptoms.
-- Do NOT predict survival, remission, or outcomes.
-
-You MAY:
-- Offer emotional support in a warm, human tone.
-- Explain cancer-related concepts in simple, general terms.
-- Help users prepare questions for their medical team.
-- Encourage users to talk to doctors, nurses, and counsellors.
-
-Always stay gentle, non-judgmental, and cautious.
-
-Every reply MUST end with this exact sentence:
-
-⚠️ I am not a doctor and cannot provide medical advice. Please consult a qualified medical professional.
-""".strip()
-
 
 class GeminiClient:
+    """Client for optional Gemini API integration."""
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: Optional[str]):
         self.api_key = api_key
         self.active = False
-        self.model = None
+        self.client = None
 
         if not api_key:
-            logger.info("GeminiClient: No API key found – running in stub mode.")
+            logger.info(
+                "GeminiClient: No API key found - running in stub mode."
+            )
             return
 
         try:
-            import google.generativeai as genai
+            self.client = genai.Client(api_key=api_key)
+            self.active = True
 
-            genai.configure(api_key=api_key)
-
-            self.model = genai.GenerativeModel(
-                model_name="gemini-1.5-pro",
-                system_instruction=SYSTEM_SAFETY_PROMPT,
+            logger.info(
+                "GeminiClient: Gemini client initialized successfully."
             )
 
-            self.active = True
-            logger.info("GeminiClient: Gemini model initialised successfully.")
-
         except Exception as e:
-            logger.warning(f"GeminiClient: Failed to initialise Gemini – {e}")
+            logger.warning(
+                f"GeminiClient: Failed to initialize Gemini - {e}"
+            )
             self.active = False
 
     def generate(self, user_prompt: str) -> str:
 
-        if not self.active or self.model is None:
-            logger.info("GeminiClient: Using stub response (no real LLM).")
+        if not self.active or self.client is None:
+            logger.info(
+                "GeminiClient: Using stub response (no real LLM)."
+            )
+
             return (
                 "[Gemini stub] "
                 + user_prompt[:220]
@@ -67,13 +51,13 @@ class GeminiClient:
             )
 
         try:
-            response = self.model.generate_content(
-                user_prompt,
-                generation_config={
-                    "temperature": 0.4,
-                    "top_p": 0.9,
-                    "max_output_tokens": 600,
-                },
+            response = self.client.models.generate_content(
+                model="gemini-3.5-flash-lite",
+                contents=user_prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_SAFETY_PROMPT,
+                    max_output_tokens=200,
+                ),
             )
 
             text = response.text or ""
@@ -87,11 +71,59 @@ class GeminiClient:
             return text
 
         except Exception as e:
-            logger.warning(f"GeminiClient: Error while calling Gemini – {e}")
+            logger.warning(
+                f"GeminiClient: Error while calling Gemini - {e}"
+            )
 
             return (
                 "I'm having trouble generating a detailed response right now, "
                 "but I'm still here to support you and listen.\n\n"
                 "⚠️ I am not a doctor and cannot provide medical advice. "
                 "Please consult a qualified medical professional."
+            )
+
+    def generate_stream(self, user_prompt: str):
+        """Generate a response progressively using Gemini streaming."""
+
+        if not self.active or self.client is None:
+            logger.info(
+                "GeminiClient: Using stub response (no real LLM)."
+            )
+
+            yield (
+                "[Gemini stub] "
+                + user_prompt[:220]
+                + " ... (demo stub response)\n\n"
+            )
+            return
+
+        try:
+            prompt = f"""
+{SYSTEM_SAFETY_PROMPT}
+
+User request:
+
+{user_prompt}
+"""
+
+            response_stream = self.client.models.generate_content_stream(
+                model="gemini-3.6-flash",
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    max_output_tokens=300,
+                ),
+            )
+
+            for chunk in response_stream:
+                if chunk.text:
+                    yield chunk.text
+
+        except Exception as e:
+            logger.warning(
+                f"GeminiClient: Streaming error - {e}"
+            )
+
+            yield (
+                "I'm having trouble generating a detailed response right now, "
+                "but I'm still here to support you and listen."
             )
