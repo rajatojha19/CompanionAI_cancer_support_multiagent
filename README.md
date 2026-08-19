@@ -313,9 +313,3 @@ Version 1 is a prototype.
 - [x] Optional Gemini integration
 - [x] Automated testing
 - [x] 26 passing tests
-
-## 👨‍💻 Project
-
-**Cancer Support CompanionAI**
-
-A multi-agent AI project focused on responsible emotional and educational support in healthcare-related contexts.
