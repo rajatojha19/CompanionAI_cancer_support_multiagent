@@ -4,10 +4,6 @@ A multi-agent AI application that provides emotional support, general cancer edu
 
 Built for the **Agents for Good** track of the Google AI Agents Intensive Capstone Project.
 
-> ⚠️ **Medical Disclaimer:** CompanionAI is not a doctor and does not provide diagnosis, treatment decisions, medication instructions, or clinical advice. It provides emotional support and general educational information. Always consult a qualified healthcare professional for medical decisions.
-
----
-
 ## ✨ Features
 
 ### ❤️ Emotional Support
@@ -313,3 +309,5 @@ Version 1 is a prototype.
 - [x] Optional Gemini integration
 - [x] Automated testing
 - [x] 26 passing tests
+
+⚠️ **Medical Disclaimer:** CompanionAI is not a doctor and does not provide diagnosis, treatment decisions, medication instructions, or clinical advice. It provides emotional support and general educational information. Always consult a qualified healthcare professional for medical decisions.
