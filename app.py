@@ -31,3 +31,8 @@ elif st.session_state["page"] == "chat":
 
 elif st.session_state["page"] == "settings":
     show_settings()
+    
+st.caption(
+    "Developed by Rajat Ojha | "
+    "Powered by Google Gemini AI • Streamlit • Python"
+)
