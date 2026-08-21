@@ -144,6 +144,6 @@ def show_welcome_page():
     st.divider()
 
     st.caption(
-        "Developed by Rajat Ojha | "
-        "Powered by Google Gemini AI • Streamlit • Python"
+    "Developed by Rajat Ojha  •  Powered by Google Gemini AI  •  "
+    "Built with Streamlit & Python"
     )

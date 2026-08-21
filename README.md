@@ -126,6 +126,8 @@ CompanionAI_cancer_support_multiagent/
 ├── services/
 │   ├── gemini_service.py
 │   └── session_manager.py
+|   └── speech_service.py
+|   
 │
 ├── tests/
 │   ├── test_agents.py
@@ -134,7 +136,6 @@ CompanionAI_cancer_support_multiagent/
 │
 ├── ui/
 │   ├── chat.py
-│   ├── components.py
 │   ├── settings.py
 │   ├── sidebar.py
 │   └── welcome.py
@@ -147,7 +148,6 @@ CompanionAI_cancer_support_multiagent/
 ├── .gitignore
 ├── app.py
 ├── config.py
-├── main.py
 ├── requirements.txt
 ├── LICENSE
 └── README.md
@@ -278,15 +278,6 @@ concepts_explained
 
 CompanionAI is intended as a support and educational tool.
 
-It does **not** provide:
-
-- Cancer diagnosis
-- Medical diagnosis
-- Medication prescriptions
-- Medication dosages
-- Treatment decisions
-- Personalized clinical instructions
-
 The system instead focuses on:
 
 - Emotional support
@@ -295,7 +286,7 @@ The system instead focuses on:
 
 ---
 
-## 📌 Version 1 Status
+## 📌 Status
 
 - [x] Multi-agent architecture
 - [x] Emotional Support Agent
