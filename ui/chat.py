@@ -10,6 +10,7 @@ Features:
 - Text input
 - Voice input
 - Multi-agent responses
+- Read Aloud for assistant responses
 """
 
 import streamlit as st
@@ -32,13 +33,16 @@ def show_chat_page():
             _,
             st.session_state.session_id,
         ) = (
-            st.session_state
-            .companion
+            st.session_state.companion
             .start_new_conversation("User")
         )
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
+
+    # Store generated audio so it survives Streamlit reruns
+    if "audio_cache" not in st.session_state:
+        st.session_state.audio_cache = {}
 
     # ============================================================
     # CompanionAI Header
@@ -62,33 +66,101 @@ def show_chat_page():
     # Conversation History
     # ============================================================
 
-    for message in st.session_state.messages:
+    for message_id, message in enumerate(
+        st.session_state.messages
+    ):
 
-        # Choose avatar based on message role
-        if message["role"] == "assistant":
-            avatar = "🎗️"
-        else:
-            avatar = "🧑"
+        # --------------------------------------------------------
+        # User Message
+        # --------------------------------------------------------
 
-        with st.chat_message(
-            message["role"],
-            avatar=avatar,
-        ):
+        if message["role"] == "user":
 
-            # Show agent name for assistant responses
-            if (
-                message["role"] == "assistant"
-                and message.get("agent")
+            with st.chat_message(
+                "user",
+                avatar="🧑",
             ):
 
-                st.caption(
-                    message["agent"]
+                st.write(
+                    message["content"]
                 )
 
-            # Display message
-            st.write(
-                message["content"]
-            )
+        # --------------------------------------------------------
+        # Assistant Message
+        # --------------------------------------------------------
+
+        else:
+
+            with st.chat_message(
+                "assistant",
+                avatar="🎗️",
+            ):
+
+                # Show agent name
+                if message.get("agent"):
+
+                    st.caption(
+                        message["agent"]
+                    )
+
+                # Show response
+                st.write(
+                    message["content"]
+                )
+
+                # ------------------------------------------------
+                # Read Aloud
+                # ------------------------------------------------
+
+                audio_key = (
+                    f"audio_{message_id}"
+                )
+
+                if st.button(
+                    "🔊 Read aloud",
+                    key=f"read_aloud_{message_id}",
+                ):
+
+                    with st.spinner(
+                        "🔊 Generating audio..."
+                    ):
+
+                        audio = (
+                            st.session_state
+                            .companion
+                            .speech_service
+                            .text_to_speech(
+                                message["content"]
+                            )
+                        )
+
+                    if audio:
+
+                        st.session_state.audio_cache[
+                            audio_key
+                        ] = audio
+
+                    else:
+
+                        st.warning(
+                            "Sorry, I couldn't generate audio."
+                        )
+
+                # ------------------------------------------------
+                # Keep audio visible after rerun
+                # ------------------------------------------------
+
+                if (
+                    audio_key
+                    in st.session_state.audio_cache
+                ):
+
+                    st.audio(
+                        st.session_state.audio_cache[
+                            audio_key
+                        ],
+                        format="audio/wav",
+                    )
 
     # ============================================================
     # Text + Voice Input
@@ -104,7 +176,7 @@ def show_chat_page():
         return
 
     # ============================================================
-    # Get typed message
+    # Get Typed Message
     # ============================================================
 
     user_message = chat_input.text
@@ -139,6 +211,10 @@ def show_chat_page():
             )
 
             return
+
+    # ============================================================
+    # Validate Message
+    # ============================================================
 
     if not user_message:
         return
@@ -189,7 +265,7 @@ def show_chat_page():
                 )
             )
 
-        # Get the agent that handled the request
+        # Get agent that handled the request
         agent_name = (
             st.session_state
             .companion
@@ -205,6 +281,54 @@ def show_chat_page():
         st.write(
             assistant_response
         )
+        
+    # --------------------------------------------------------
+    # Read Aloud for the newly generated response
+    # --------------------------------------------------------
+
+    audio_key = (
+        f"audio_new_{len(st.session_state.messages)}"
+    )
+
+    if st.button(
+        "🔊 Read aloud",
+        key=f"read_aloud_new_{len(st.session_state.messages)}",
+    ):
+
+        with st.spinner(
+            "🔊 Generating audio..."
+        ):
+
+            audio = (
+                st.session_state
+                .companion
+                .speech_service
+                .text_to_speech(
+                    assistant_response
+                )
+            )
+
+        if audio:
+
+            st.session_state.audio_cache[
+                audio_key
+            ] = audio
+
+        else:
+
+            st.warning(
+                "Sorry, I couldn't generate audio."
+            )
+
+    # Show cached audio after rerun
+    if audio_key in st.session_state.audio_cache:
+
+        st.audio(
+            st.session_state.audio_cache[
+                audio_key
+            ],
+            format="audio/wav",
+        )
 
     # ============================================================
     # Save Assistant Response
@@ -217,3 +341,4 @@ def show_chat_page():
             "agent": agent_name,
         }
     )
+

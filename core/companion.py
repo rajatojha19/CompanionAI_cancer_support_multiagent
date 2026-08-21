@@ -14,14 +14,18 @@ class CancerSupportCompanion:
     """Main multi-agent system coordinating all components."""
 
     def __init__(self, llm: Optional[GeminiClient] = None):
+
         if llm is None:
             llm = GeminiClient(GEMINI_API_KEY)
 
         self.session_manager = SessionManager()
 
         self.emotional_agent = EmotionalSupportAgent(llm)
+
         self.question_agent = QuestionOrganizerAgent()
+
         self.educational_agent = EducationalAgent(llm)
+
         self.speech_service = SpeechService(llm)
 
         # Stores which agent handled the latest message
@@ -39,12 +43,18 @@ class CancerSupportCompanion:
             "CancerSupportCompanion: Multi-agent system initialized"
         )
 
+    # ============================================================
+    # Start New Conversation
+    # ============================================================
+
     def start_new_conversation(self, user_name: str):
+
         session = self.session_manager.create_session(user_name)
 
         self.metrics["sessions_created"] += 1
 
-        welcome_message = f"""Hello {user_name}, I'm your Cancer Support Companion. I'm here to:
+        welcome_message = f"""
+Hello {user_name}, I'm your Cancer Support Companion. I'm here to:
 
 • Provide emotional support when you need someone to talk to
 • Help you organize questions for your medical team
@@ -52,17 +62,29 @@ class CancerSupportCompanion:
 
 You can type 'quit' at any time to end the conversation.
 
-How are you feeling today?"""
+How are you feeling today?
+"""
 
-        session.add_message("system", welcome_message)
+        session.add_message(
+            "system",
+            welcome_message
+        )
 
-        return welcome_message, session.session_id
+        return (
+            welcome_message,
+            session.session_id
+        )
+
+    # ============================================================
+    # Process User Message
+    # ============================================================
 
     def process_message(
         self,
         session_id: str,
         user_message: str,
     ) -> str:
+        """Route the user's message to the appropriate agent."""
 
         session = self.session_manager.get_session(session_id)
 
@@ -72,34 +94,136 @@ How are you feeling today?"""
                 "Let's start over."
             )
 
+        # Save user message
         session.add_message("user", user_message)
-
         self.metrics["messages_processed"] += 1
 
-        user_message_lower = user_message.lower()
+        user_message_lower = user_message.lower().strip()
 
-        # Emotional support routing
-        if any(
-            word in user_message_lower
-            for word in [
-                "feel",
-                "scared",
-                "sad",
-                "worried",
-                "anxious",
-                "overwhelmed",
-            ]
+        # ========================================================
+        # Educational phrases
+        # ========================================================
+
+        educational_phrases = [
+            # English
+            "what is",
+            "what are",
+            "what does",
+            "explain",
+            "tell me about",
+            "how does",
+            "how is",
+            "how are",
+            "what happens",
+            "what causes",
+            "why does",
+            "why is",
+            "meaning of",
+
+            # Hinglish / Roman Hindi
+            "kya hai",
+            "kya hota",
+            "kya hoti",
+            "kya hote",
+            "kaise",
+            "kaise hota",
+            "kaise hoti",
+            "kaise hote",
+            "kyun",
+            "kyu",
+            "samjhao",
+            "samjha do",
+            "samjha",
+            "batao",
+            "bata do",
+            "btao",
+            "bta do",
+            "iske baare mein",
+            "iske bare mein",
+            "short mein",
+            "short me",
+            "brief mein",
+            "brief me",
+        ]
+
+        # ========================================================
+        # Common medical terms
+        # ========================================================
+
+        medical_terms = [
+            "biopsy",
+            "biospy",
+            "biopsi",
+            "cancer",
+            "chemotherapy",
+            "chemo",
+            "radiation",
+            "remission",
+            "tumor",
+            "tumour",
+            "metastasis",
+            "metastatic",
+            "cancer cell",
+            "cancer cells",
+            "treatment",
+            "side effect",
+            "side effects",
+            "scan",
+            "mri",
+            "ct scan",
+            "pet scan",
+            "pathology",
+            "diagnosis",
+        ]
+
+        # ========================================================
+        # Determine educational intent
+        # ========================================================
+
+        is_educational = any(
+            phrase in user_message_lower
+            for phrase in educational_phrases
+        )
+
+        mentions_medical_topic = any(
+            term in user_message_lower
+            for term in medical_terms
+        )
+
+        # ========================================================
+        # Educational Agent
+        # ========================================================
+
+        if is_educational or (
+            mentions_medical_topic
+            and any(
+                word in user_message_lower
+                for word in [
+                    "tell",
+                    "explain",
+                    "about",
+                    "samj",
+                    "bata",
+                    "meaning",
+                    "kya",
+                    "kaise",
+                    "what",
+                    "how",
+                ]
+            )
         ):
-            self.last_agent = "Emotional Support Agent"
+            self.last_agent = "Educational Agent"
 
-            self.metrics["emotional_support_given"] += 1
+            self.metrics["concepts_explained"] += 1
 
-            response = self.emotional_agent.provide_support(
-                user_message,
-                session,
+            response = self.educational_agent.explain_concept(
+                user_message
             )
 
-        # Question organizer routing
+        # ========================================================
+        # Question Organizer Agent
+        # ========================================================
+
         elif any(
             word in user_message_lower
             for word in [
@@ -119,56 +243,37 @@ How are you feeling today?"""
             self.metrics["questions_generated"] += 1
 
             response = self.question_agent.generate_questions(
-                concerns
+                concerns,
+                user_message,
             )
 
-        # Educational routing
+        # ========================================================
+        # Emotional Support Agent
+        # ========================================================
+
         elif any(
-            phrase in user_message_lower
-            for phrase in [
-                "what is",
-                "what are",
-                "what does",
-                "explain",
-                "tell me about",
-                "how does",
-                "how is",
-                "how are",
-                "what happens",
-                "what causes",
-                "why does",
-                "why is",
-                "meaning of",
-                "kaise",
-                "kya hai",
-                "kya hota",
-                "kya hoti",
-                "kyun",
-                "kyu",
-                "kaise hota",
-                "kaise hoti",
-                "iske baare mein",
-                "iske bare mein",
-                "samjhao",
-                "samjha do",
-                "batao",
-                "bata do",
-                "short mein",
-                "short me",
-                "brief mein",
-                "brief me",
+            word in user_message_lower
+            for word in [
+                "feel",
+                "scared",
+                "sad",
+                "worried",
+                "anxious",
+                "overwhelmed",
+                "afraid",
+                "stress",
+                "stressed",
+                "tension",
+                "dar",
+                "darr",
+                "pareshan",
+                "pareshaan",
+                "ghabra",
+                "ghabrahat",
+                "dukhi",
+                "udaas",
             ]
         ):
-            self.last_agent = "Educational Agent"
-
-            self.metrics["concepts_explained"] += 1
-
-            response = self.educational_agent.explain_concept(
-                user_message
-            )
-
-        # Default routing
-        else:
             self.last_agent = "Emotional Support Agent"
 
             self.metrics["emotional_support_given"] += 1
@@ -178,33 +283,65 @@ How are you feeling today?"""
                 session,
             )
 
+        # ========================================================
+        # Default → Educational Agent
+        # ========================================================
+
+        else:
+            self.last_agent = "Educational Agent"
+
+            self.metrics["concepts_explained"] += 1
+
+            response = self.educational_agent.explain_concept(
+                user_message
+            )
+
+        # ========================================================
+        # Save session
+        # ========================================================
+
         self.session_manager.save_session_state(session)
 
         logger.info(
             "CancerSupportCompanion: "
-            "Processed message through multi-agent system"
+            f"Processed message through {self.last_agent}"
         )
 
         return response
+    # ============================================================
+    # Get Last Agent
+    # ============================================================
 
     def get_last_agent(self) -> str:
+
         """Return the agent that handled the latest message."""
 
         return self.last_agent or "CompanionAI"
+
+    # ============================================================
+    # Get Conversation History
+    # ============================================================
 
     def get_conversation_history(
         self,
         session_id: str,
     ) -> List[Dict]:
 
-        session = self.session_manager.get_session(session_id)
+        session = self.session_manager.get_session(
+            session_id
+        )
 
         if session:
             return session.conversation_history
 
         return []
 
+    # ============================================================
+    # Get Metrics
+    # ============================================================
+
     def get_metrics(self) -> Dict:
+
         """Return a copy of the current system metrics."""
 
         return self.metrics.copy()

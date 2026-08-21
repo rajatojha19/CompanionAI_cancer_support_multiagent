@@ -1,80 +1,152 @@
 from typing import Optional
+
 from utils.logger import logger
 from services.gemini_service import GeminiClient
 
 
 class EducationalAgent:
-    """Provides general educational information about cancer concepts"""
+    """Provides general educational information about cancer concepts."""
 
-    def __init__(self, llm: Optional[GeminiClient] = None):
+    def __init__(
+        self,
+        llm: Optional[GeminiClient] = None,
+    ):
         self.llm = llm
+
         self.safety_disclaimer = (
             "⚠️ I am not a doctor and cannot provide medical advice. "
             "Please consult a qualified medical professional."
         )
+
         self.educational_topics = {
-            "chemotherapy": "Chemotherapy uses medications to treat cancer. These medications work by targeting rapidly dividing cells.",
-            "radiation": "Radiation therapy uses high-energy beams to target and damage cancer cells in specific areas.",
-            "biopsy": "A biopsy is a procedure where a small sample of tissue is taken for examination under a microscope.",
-            "remission": "Remission means there is no evidence of cancer after treatment. It can be partial or complete.",
-            "side_effects": "Side effects are unintended effects of treatment that can vary from person to person.",
-            "support_care": "Supportive care focuses on managing symptoms and improving quality of life during treatment.",
+            "chemotherapy": (
+                "Chemotherapy uses medications to treat cancer. "
+                "These medications work by targeting rapidly dividing cells."
+            ),
+            "radiation": (
+                "Radiation therapy uses high-energy beams to target "
+                "and damage cancer cells in specific areas."
+            ),
+            "biopsy": (
+                "A biopsy is a procedure where a small sample of "
+                "tissue is taken for examination under a microscope."
+            ),
+            "remission": (
+                "Remission means there is no evidence of cancer "
+                "after treatment. It can be partial or complete."
+            ),
+            "side_effects": (
+                "Side effects are unintended effects of treatment "
+                "that can vary from person to person."
+            ),
+            "support_care": (
+                "Supportive care focuses on managing symptoms "
+                "and improving quality of life during treatment."
+            ),
         }
 
-    def explain_concept(self, concept: str) -> str:
+    def explain_concept(
+        self,
+        concept: str,
+    ) -> str:
+        """Explain a cancer-related concept in the user's language."""
+
         concept_lower = concept.lower()
 
+        # ========================================================
+        # Gemini-powered response
+        # ========================================================
+
         if self.llm and self.llm.active:
+
             prompt = f"""
-    User asked: "{concept}"
+You are the Educational Agent of CompanionAI.
 
-    Answer the user's question directly.
+User question:
+"{concept}"
 
-    RESPONSE LENGTH:
-    - Give a concise but complete answer.
-- For a simple question, use 2-3 short sentences.
-- For a normal question, use 3-4 short sentences.
-- If the user explicitly asks for detailed information, use at most 5-6 sentences.
-- Do not repeat information unnecessarily.
-- Do not add emotional-support advice unless the user asks for it.
+Your task is to answer the user's medical education question
+in a SHORT, DIRECT and EASY-TO-UNDERSTAND way.
 
 LANGUAGE:
-- Reply in the same language as the user.
-- English question → English.
-- Hindi question → Hindi.
-- Hinglish/Roman Hindi question → natural Hinglish/Roman Hindi.
-- Do not unnecessarily switch languages.
+- English → English
+- Hindi → Hindi
+- Hinglish / Roman Hindi → Hinglish / Roman Hindi
+- Never convert Roman Hindi into English.
+- Never convert Roman Hindi into Devanagari Hindi.
+
+Examples:
+
+User:
+"biopsy kya hoti hai?"
+
+Answer:
+"Biopsy ek medical procedure hai jisme doctor body ke kisi
+area se tissue ya cells ka chhota sample lete hain. Is sample
+ko laboratory mein examine kiya jata hai taaki doctors
+condition ko better samajh saken."
+
+User:
+"what is a biopsy?"
+
+Answer:
+"A biopsy is a medical procedure in which a small sample of
+tissue or cells is taken from the body and examined in a
+laboratory."
+
+STRICT LENGTH:
+- Maximum 3 sentences.
+- Prefer 2 sentences.
+- Maximum 60 words.
+- Do NOT give emotional-support advice unless specifically asked.
+- Do NOT start with "Hello".
+- Do NOT say "It is completely understandable".
+- Do NOT repeat the question.
+- Answer the question immediately.
 
 MEDICAL SAFETY:
-- Provide only general educational information.
-- Do not diagnose the user.
-- Do not interpret their symptoms, reports, scans, or test results.
-- Do not recommend, compare, or select treatments.
-- Do not suggest medicines, dosages, or medical procedures.
-- Do not provide step-by-step instructions for medical procedures.
-- Do not make predictions about survival, remission, or outcomes.
-- Encourage the user to consult their healthcare professional when appropriate.
+- Give only general educational information.
+- Do not diagnose.
+- Do not interpret reports or scans.
+- Do not recommend medicines or treatments.
+- Do not provide personalized medical advice.
 
-STYLE:
-- Be clear, natural, and easy for a non-medical person to understand.
-- Answer the actual question first.
-- Avoid unnecessary introductions such as "Hello" or "It is completely normal..."
-- Do not turn a simple educational question into an emotional-support response.
+At the end, add this exact disclaimer:
+
+"⚠️ I am not a doctor and cannot provide medical advice.
+Please consult a qualified medical professional."
+
+Return only the answer and disclaimer.
 """
 
-            return self.llm.generate(prompt)
+            response = self.llm.generate(prompt)
+
+            if response:
+                return response
+
+        # ========================================================
+        # Local fallback
+        # ========================================================
 
         for topic, explanation in self.educational_topics.items():
+
             if topic in concept_lower:
-                logger.info(f"EducationalAgent: Explained concept '{topic}'")
+
+                logger.info(
+                    f"EducationalAgent: Explained concept '{topic}'"
+                )
+
                 return (
-                    f"Here's some general information about {topic}:\n\n"
-                    f"{explanation}\n\n{self.safety_disclaimer}"
+                    f"Here's some general information about "
+                    f"{topic}:\n\n"
+                    f"{explanation}\n\n"
+                    f"{self.safety_disclaimer}"
                 )
 
         return (
-            "I can provide general information about common cancer-related topics "
-            "like chemotherapy, radiation, biopsies, and more. "
-            "What specific concept would you like me to explain?\n\n"
+            "I can provide general information about common "
+            "cancer-related topics like chemotherapy, radiation, "
+            "biopsies, and more. What specific concept would "
+            "you like me to explain?\n\n"
             f"{self.safety_disclaimer}"
         )

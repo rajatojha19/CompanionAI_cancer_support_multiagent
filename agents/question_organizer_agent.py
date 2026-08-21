@@ -1,10 +1,12 @@
 import re
 
-from typing import List, Optional
+from typing import List
+
 from utils.logger import logger
 
+
 class QuestionOrganizerAgent:
-    """Agent that helps organize questions for medical teams"""
+    """Helps users prepare questions for their healthcare team."""
 
     def __init__(self):
         self.question_categories = {
@@ -14,75 +16,272 @@ class QuestionOrganizerAgent:
             "follow_up": "Questions about next steps and monitoring",
         }
 
-    def extract_concerns(self, user_message: str) -> List[str]:
+    # ============================================================
+    # Detect language
+    # ============================================================
+
+    def is_hinglish(
+        self,
+        message: str,
+    ) -> bool:
+        """Detect common Roman Hindi / Hinglish expressions."""
+
+        message_lower = message.lower()
+
+        hinglish_words = [
+            "mujhe",
+            "mera",
+            "meri",
+            "mere",
+            "mujhko",
+            "doctor se",
+            "kya",
+            "kaise",
+            "kyun",
+            "kyu",
+            "batao",
+            "bata do",
+            "samjhao",
+            "puchu",
+            "poochu",
+            "puchna",
+            "poochna",
+            "chahiye",
+            "hai",
+            "hota",
+            "hoti",
+            "raha",
+            "rahi",
+            "baare mein",
+            "bare mein",
+            "agla",
+            "agli",
+        ]
+
+        return any(
+            phrase in message_lower
+            for phrase in hinglish_words
+        )
+
+    # ============================================================
+    # Extract concerns
+    # ============================================================
+
+    def extract_concerns(
+        self,
+        user_message: str,
+    ) -> List[str]:
+        """Identify the topics the user wants to discuss."""
+
         concerns: List[str] = []
+
+        message_lower = user_message.lower()
+
         patterns = {
-            "treatment": r"(treatment|therapy|medication|chemo|chemotherapy|radiation)",
-            "symptoms": r"(pain|tired|fatigue|nausea|sleep|appetite|vomit)",
-            "lifestyle": r"(work|exercise|diet|food|family|daily|routine)",
-            "follow_up": r"(next|follow|appointment|test|scan|results)",
+            "treatment": (
+                r"(treatment|therapy|medication|medicine|"
+                r"chemo|chemotherapy|radiation|इलाज)"
+            ),
+
+            "symptoms": (
+                r"(pain|tired|fatigue|nausea|sleep|appetite|"
+                r"vomit|symptom|dard|thakan|ulti|matli)"
+            ),
+
+            "lifestyle": (
+                r"(work|exercise|diet|food|family|daily|"
+                r"routine|khana|exercise|kaam|roz)"
+            ),
+
+            "follow_up": (
+                r"(next|follow|appointment|test|scan|results|"
+                r"report|agla|agli|result|test)"
+            ),
         }
 
         for category, pattern in patterns.items():
-            if re.search(pattern, user_message.lower()):
+
+            if re.search(
+                pattern,
+                message_lower,
+            ):
                 concerns.append(category)
 
-        logger.info(f"QuestionOrganizerAgent: Extracted concerns {concerns}")
+        logger.info(
+            "QuestionOrganizerAgent: "
+            f"Extracted concerns {concerns}"
+        )
+
         return concerns
 
-    def generate_questions(self, concerns: List[str]) -> str:
-        question_templates = {
+    # ============================================================
+    # Generate questions
+    # ============================================================
+
+    def generate_questions(
+        self,
+        concerns: List[str],
+        user_message: str = "",
+    ) -> str:
+        """Generate concise questions for the healthcare team."""
+
+        hinglish = self.is_hinglish(user_message)
+
+        # --------------------------------------------------------
+        # English questions
+        # --------------------------------------------------------
+
+        english_templates = {
             "treatment": [
-                "What are the goals of this treatment?",
-                "What are the potential side effects I should watch for?",
-                "How will we know if the treatment is working?",
-                "Are there alternative treatment options we should consider?",
+                "What is the main goal of this treatment?",
+                "What side effects should I watch for?",
             ],
+
             "symptoms": [
-                "Is this symptom something I should be concerned about?",
-                "What can I do to manage this symptom at home?",
-                "When should I contact you about this symptom?",
-                "Could this symptom be related to my treatment?",
+                "Could this symptom be related to my condition or treatment?",
+                "When should I contact my healthcare team about this symptom?",
             ],
+
             "lifestyle": [
-                "What kind of daily activities are safe for me right now?",
-                "Are there dietary changes that might help me?",
-                "How can I manage my energy levels throughout the day?",
-                "What support is available for my family and caregivers?",
+                "What daily activities are safe for me right now?",
+                "Are there any lifestyle or diet changes I should discuss with you?",
             ],
+
             "follow_up": [
-                "When is our next appointment?",
-                "What tests will we do next?",
-                "What changes should I report before our next visit?",
-                "Who should I contact if I have questions between appointments?",
+                "What are the next steps in my care?",
+                "When should I have my next appointment or test?",
             ],
         }
 
-        questions: List[str] = []
-        for concern in concerns:
-            if concern in question_templates:
-                questions.extend(question_templates[concern][:2])
+        # --------------------------------------------------------
+        # Hinglish questions
+        # --------------------------------------------------------
 
-        if not questions:
-            questions = [
-                "Can you explain my diagnosis in terms I can understand?",
-                "What are the next steps in my care plan?",
-                "Who is the best person to contact with questions?",
-                "What resources are available to help me cope emotionally?",
-            ]
+        hinglish_templates = {
+            "treatment": [
+                "Is treatment ka main goal kya hai?",
+                "Is treatment ke kaunse side effects mujhe notice karne chahiye?",
+            ],
 
-        response_lines = [
-            "Based on what you've shared, here are some questions you might want to ask your medical team:",
-            "",
-        ]
-        for i, q in enumerate(questions, 1):
-            response_lines.append(f"{i}. {q}")
+            "symptoms": [
+                "Kya ye symptom meri condition ya treatment se related ho sakta hai?",
+                "Is symptom ke liye mujhe doctor se kab contact karna chahiye?",
+            ],
 
-        response_lines.append(
-            "\nRemember to write down your questions before appointments.\n\n"
-            "⚠️ I am not a doctor and cannot provide medical advice. Please consult a qualified medical professional."
+            "lifestyle": [
+                "Abhi main kaunsi daily activities safely kar sakta/sakti hoon?",
+                "Kya mujhe diet ya lifestyle mein koi changes doctor se discuss karne chahiye?",
+            ],
+
+            "follow_up": [
+                "Mere care ka next step kya hoga?",
+                "Meri next appointment ya test kab hona chahiye?",
+            ],
+        }
+
+        templates = (
+            hinglish_templates
+            if hinglish
+            else english_templates
         )
 
-        response = "\n".join(response_lines)
-        logger.info(f"QuestionOrganizerAgent: Generated {len(questions)} questions")
+        # --------------------------------------------------------
+        # Generate questions
+        # --------------------------------------------------------
+
+        questions: List[str] = []
+
+        for concern in concerns:
+
+            if concern in templates:
+
+                questions.extend(
+                    templates[concern][:2]
+                )
+
+        # Remove duplicates
+        questions = list(
+            dict.fromkeys(questions)
+        )
+
+        # Keep response concise
+        questions = questions[:4]
+
+        # --------------------------------------------------------
+        # No specific concern
+        # --------------------------------------------------------
+
+        if not questions:
+
+            if hinglish:
+
+                questions = [
+                    "Meri condition ke baare mein mujhe sabse important kya samajhna chahiye?",
+                    "Mere care ka next step kya hoga?",
+                    "Agar mujhe koi concern ho to mujhe kisse contact karna chahiye?",
+                ]
+
+            else:
+
+                questions = [
+                    "What is the most important thing I should understand about my condition?",
+                    "What are the next steps in my care?",
+                    "Who should I contact if I have concerns?",
+                ]
+
+        # --------------------------------------------------------
+        # Response
+        # --------------------------------------------------------
+
+        if hinglish:
+
+            response_lines = [
+                "Aap apni medical team se ye questions pooch sakte hain:",
+                "",
+            ]
+
+        else:
+
+            response_lines = [
+                "You may want to ask your medical team:",
+                "",
+            ]
+
+        for index, question in enumerate(
+            questions,
+            start=1,
+        ):
+            response_lines.append(
+                f"{index}. {question}"
+            )
+
+        response_lines.append("")
+
+        if hinglish:
+
+            response_lines.append(
+                "In questions ko appointment se pehle note kar lena helpful ho sakta hai."
+            )
+
+        else:
+
+            response_lines.append(
+                "It may help to write these questions down before your appointment."
+            )
+
+        response_lines.append("")
+        response_lines.append(
+            "⚠️ I am not a doctor and cannot provide medical advice. "
+            "Please consult a qualified medical professional."
+        )
+
+        response = "\n".join(
+            response_lines
+        )
+
+        logger.info(
+            "QuestionOrganizerAgent: "
+            f"Generated {len(questions)} questions"
+        )
+
         return response
