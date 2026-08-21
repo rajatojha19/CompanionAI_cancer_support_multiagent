@@ -81,7 +81,7 @@ Sessions currently contain:
 
 - **Python**
 - **Streamlit**
-- **Google Gemini API** — optional
+- **Google Gemini API**
 - **python-dotenv**
 - **Requests**
 - **Pytest**
