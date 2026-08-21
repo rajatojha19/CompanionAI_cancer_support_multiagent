@@ -1,6 +1,5 @@
 import streamlit as st
 
-
 def show_welcome_page():
     """Display the CompanionAI welcome page."""
 
@@ -141,4 +140,10 @@ def show_welcome_page():
         "CompanionAI is not a substitute for professional medical "
         "advice, diagnosis, or treatment. Always consult a qualified "
         "healthcare professional for medical decisions."
+    )
+    st.divider()
+
+    st.caption(
+        "Developed by Rajat Ojha | "
+        "Powered by Google Gemini AI • Streamlit • Python"
     )
